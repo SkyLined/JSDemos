@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script type="text/javascript" src="Events.js"></script>
+    <script type="text/javascript" src="CombinedEvents.js"></script>
+    <script type="text/javascript" src="WindowResizeEvents.js"></script>
+    <script type="text/javascript" src="Nodes.js"></script>
+    <script type="text/javascript" src="ProgressBar.js"></script>
+    <script type="text/javascript" src="SvgBlur.js"></script>
+    <script type="text/javascript" src="PageWorker.js"></script>
+    <script type="text/javascript" src="isMobile.js"></script>
+    <script type="text/javascript" src="RGBA.js"></script>
+    <script type="text/javascript" src="CircularGradient.js"></script>
+    <script type="text/javascript" src="TransitionTimer.js"></script>
+    <script type="text/javascript" src="InteractiveCanvas.js"></script>
+    <script type="text/javascript" src="Popup.js"></script>
+    <script type="text/javascript" src="BasicMandelTask.js"></script>
+    <script type="text/javascript" src="SmoothMandelTask.js"></script>
+    <script type="text/javascript" src="PuzzleMandelTask.js"></script>
+    <script type="text/javascript" src="SmoothDistanceMandelTask.js"></script>
+    <script type="text/javascript" src="FinalAngleMandelTask.js"></script>
+    <script type="text/javascript" src="CombinedAngleMandelTask.js"></script>
+    <script type="text/javascript" src="FinalFeatherMandelTask.js"></script>
+    <script type="text/javascript" src="CombinedFeatherMandelTask.js"></script>
+    <script type="text/javascript" src="TestMandelTask.js"></script>
+    <script type="text/javascript" src="MandelCanvasRenderer.js"></script>
+    <script type="text/javascript" src="https://ssl.google-analytics.com/ga.js"></script>
+    <script type="text/javascript">
+      try {
+        var pageTracker = _gat._getTracker("UA-549122-4");
+        pageTracker._trackPageview();
+      } catch(err) {}
+
+      var sInstructions = 
+          '<ul>' +
+            '<li>Click anywhere to center on the clicked area.</li>' +
+            '<li>Use vertical mouse scroll wheel to zoom in and out.</li>' +
+            '<li>Hold down ALT key while using vertical mouse scroll wheel to change the ' +
+                'maximum number of iterations.</li>' +
+            '<li>Hold down SHIFT key while using vertical mouse scroll wheel to change the ' +
+                'zoom level or maxium number of iterations faster.</li>' +
+            '<li>Resize this window to change the size of the rendered fractal.</li>' +
+            '<li>Press ESC to close popups like this.</li>' +
+            '<li>Press F1 to open this help popup.</li>' +
+            '<li>Press SPACE to reopen the status popup when closed.</li>' +
+          '</ul>' +
+          'Now, press <strong>ESC</strong> to close this popup and open the status popup.<br/>';
+      var sFilterName = 'wadiewadiewa', iBlur = 5;
+      var oHelpPopup, oStatusPopup, oSvgBlur
+      var nUpdateFrequency = 3,
+          iMandelTask = 0;
+      var bMobile = isMobile();
+
+      function init() {
+        oSvgBlur = new SvgBlur(document.documentElement, iBlur, -1, sFilterName);
+        var oImg = document.createElement('img');
+        oImg.src = 'puzzle.png?' + new Date().valueOf();
+        oImg.onload = function () {
+          var oCanvas = document.createElement('canvas');
+          oCanvas.width = oImg.width;
+          oCanvas.height = oImg.height;
+          var oContext = oCanvas.getContext('2d');
+          oContext.drawImage(oImg, 0, 0, oImg.width, oImg.height);
+          goPuzzleMandelTaskImageData = oContext.getImageData(0, 0, oImg.width, oImg.height);
+          go();
+        }
+        oHelpPopup = new Popup(document.documentElement, 'Mandel instructions', sInstructions, new RGBA(.8, .85, .9, .9));
+        oStatusPopup = new Popup(document.documentElement, 'Rendering status', 'Loading...', new RGBA(.85, .85, .85, .9));
+        oHelpPopup.addEventListener('close', function () {
+          oStatusPopup.open();
+          oHelpPopup.removeEventListener('close', arguments.callee);
+        });
+        oHelpPopup.open();
+        oStatusPopup.setLocation('bottomright');
+      }
+      function decodeHash(oMandelCanvasRenderer) {
+        var asArgs = location.hash.substr(1).split('&');
+        for (var i = 0; i < asArgs.length; i++) {
+          var asArg = asArgs[i].split('=');
+          switch (asArg[0]) {
+            case 'config': oMandelCanvasRenderer.setConfig(JSON.parse(unescape(asArg[1]))); break;
+          }
+        }
+      }
+      function updateHash(oMandelCanvasRenderer, oConfig) {
+        var asArgs = ['config=' + escape(JSON.stringify(oConfig))];
+        location.hash = '#' + asArgs.join('&');
+      }
+
+      function go() {
+        var oColorGradient = new CircularGradient(new RGB(0,0,0));
+        oColorGradient.addColor(new RGBA(1,0,0, 1), 0, .75);
+        oColorGradient.addColor(new RGBA(0,1,0, 1), 1/6, .75);
+        oColorGradient.addColor(new RGBA(0,0,1, 1), 1/3, .75);
+
+        redirectWindowResizeEvents(document.documentElement);
+        var oInteractiveCanvas = new InteractiveCanvas(document.documentElement);
+//        oSvgBlur.redraw();
+
+        var oMandelCanvasRenderer = new MandelCanvasRenderer(oInteractiveCanvas, nUpdateFrequency, iMandelTask, oColorGradient);
+
+        oMandelCanvasRenderer.addEventListener('updateCanvas', updateStatus);
+        oMandelCanvasRenderer.addEventListener('updateConfig', updateHash);
+
+        addBubbleTargetEventListener(window, 'keydown', function handleKeyPressEvent(oEvent) {
+          // "Bubble" or "target" because we don't want to interfere with the user typing
+          switch (oEvent.keyCode) {
+            case 0x20: // space
+              if (!oHelpPopup.bOpen) {
+                oStatusPopup.open();
+              }
+              oEvent.preventDefault();
+              oEvent.stopPropagation();
+              break;
+            case 0x70: // F1
+              oStatusPopup.close();
+              oHelpPopup.open();
+              oEvent.preventDefault();
+              oEvent.stopPropagation();
+              break;
+            case 0x1B:
+              if (oHelpPopup.bOpen) {
+                oHelpPopup.close();
+              } else {
+                oStatusPopup.close();
+              }
+              oEvent.preventDefault();
+              oEvent.stopPropagation();
+              break;
+            default:
+              if (oEvent.keyCode >= 0x31 && oEvent.keyCode <= 0x39 && oEvent.keyCode <= 0x30 + gaoMandelTasks.length) {
+                var iMandelTask = oEvent.keyCode - 0x31;
+                var oConfig = oMandelCanvasRenderer.getConfig();
+                oConfig.t = iMandelTask;
+                oMandelCanvasRenderer.setConfig(oConfig);
+                oEvent.preventDefault();
+                oEvent.stopPropagation();
+              } else {
+                console.log('keyboard event key code: 0x' + oEvent.keyCode.toString(16));
+              }
+          }
+        });
+        decodeHash(oMandelCanvasRenderer);
+        oMandelCanvasRenderer.start();
+
+        function updateStatus() {
+          oStatusPopup.setBodyHTML(oMandelCanvasRenderer.getStatusHTML());
+          oStatusPopup.setColor(oMandelCanvasRenderer.progress == 1 ? new RGBA(.8, .85, .8, .9) : new RGBA(.85, .8, .8, .9));
+//          oSvgBlur.redraw();
+        }
+
+      }
+    </script>
+  </head>
+  <body style="position:absolute; margin:0; padding:0; width:100%; height: 100%; overflow: hidden; font-size: 12px; font-family: Verdana, sans-serif;" onload="init()"></body>
+</html>

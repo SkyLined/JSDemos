@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <script src="Nodes/Nodes.js"></script>
+    <script src="SvgBlur/SvgBlur.js"></script>
+    <script>
+      var oSvgBlur = null;
+      function go() {
+      var sFilterName = 'wadiewadiewa', iBlur = 5;
+        oSvgBlur = new SvgBlur(document.documentElement, iBlur, -1, sFilterName);
+        add('orange');
+        add('green');
+        add('orange');
+        add('green');
+        add('orange');
+        addCanvas('green');
+      }
+      function addCanvas(sColor) {
+        var oCanvas = document.createElement('canvas');
+        oCanvas.width = oSvgBlur.documentElement.clientWidth;
+        oCanvas.height = 10;
+        with(oCanvas.getContext('2d')) {
+          fillStyle = sColor;
+          fillRect(0, 0, oCanvas.width, oCanvas.height);
+        }
+        oSvgBlur.documentElement.appendChild(oCanvas);
+        oSvgBlur.redraw();
+      }
+      function add(sColor) {
+        var oDiv = document.createElement('div');
+        oDiv.style.background = sColor;
+        oDiv.innerHTML = 'x';
+        oSvgBlur.documentElement.appendChild(oDiv);
+        oSvgBlur.redraw();
+      }
+      function remove() {
+        if (oSvgBlur.documentElement.firstChild) {
+          oSvgBlur.documentElement.removeChild(oSvgBlur.documentElement.firstChild);
+          oSvgBlur.redraw();
+        }
+      }
+      function xblur(iBlur) {
+        oSvgBlur.setBlur(iBlur);
+        oSvgBlur.redraw();
+      }
+    </script>
+  </head>
+  <body onload="go()">
+    <button onclick="add('orange');">orange</button>
+    <button onclick="add('green');">green</button>
+    <button onclick="addCanvas('red');">red</button>
+    <button onclick="remove();">remove</button><br/>
+    <button onclick="xblur(0);">blur 0</button>
+    <button onclick="xblur(5);">blur 5</button>
+    <button onclick="xblur(10);">blur 10</button>
+  </body>
+</html>

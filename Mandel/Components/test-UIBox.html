@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script type="text/javascript" src="CombinedEvents/CombinedEvents.js"></script>
+    <script type="text/javascript" src="CSS/CSS.js"></script>
+    <script type="text/javascript" src="Events/Events.js"></script>
+    <script type="text/javascript" src="Nodes/Nodes.js"></script>
+    <script type="text/javascript" src="RGBA/RGBA.js"></script>
+    <script type="text/javascript" src="UIBox/UIBox.js"></script>
+    <script type="text/javascript">
+      function go() {
+        new UIBox(document.body).oInnerElement.innerHTML = 'default values';
+        document.body.appendChild(document.createElement('br'));
+
+        new UIBox(new UIBox(document.body).oInnerElement).oInnerElement.innerHTML = 'box within a box';
+        document.body.appendChild(document.createElement('br'));
+
+        new UIBox(document.body, '10em', '2em').oInnerElement.innerHTML = 'Hard coded size (too small)';
+        document.body.appendChild(document.createElement('br'));
+
+        var asStyles = ['inset', 'outset', 'solid'];
+        for (var i = 0; i < asStyles.length; i++) {
+          var sStyle = asStyles[i];
+          document.body.appendChild(document.createTextNode(sStyle));
+          document.body.appendChild(document.createElement('br'));
+          for (var nX = 1/20; nX <= 1; nX += 1/20) {
+            var oColorF = new HSL(nX, 1, .5);
+            var oUIBox = new UIBox(document.body, '2em', '4em');
+            oUIBox.setBorderStyle(sStyle);
+            oUIBox.setBorderWidth(2 + nX * 10 + 'px');
+            oUIBox.setBorderRadius(2 + nX * 20 + 'px');
+            oUIBox.setBorderColor(oColorF);
+            oUIBox.setBackgroundColor(oColorF.setOpacity(.5));
+            oUIBox.oInnerElement.innerHTML = 'x';
+          }
+          document.body.appendChild(document.createElement('br'));
+        }
+        document.body.appendChild(document.createTextNode('opacity'));
+        document.body.appendChild(document.createElement('br'));
+        for (var nX = 1/20; nX <= 1; nX += 1/20) {
+          var oUIBox = new UIBox(document.body, '2em', '4em');
+          oUIBox.setOpacity(nX);
+          oUIBox.oInnerElement.innerHTML = 'x';
+        }
+        document.body.appendChild(document.createElement('br'));
+        var oAvoidUIBox = new UIBox(document.body, '5em');
+        oAvoidUIBox.setBorderWidth(10);
+        oAvoidUIBox.setBorderRadius('2.5em');
+        oAvoidUIBox.oInnerElement.innerHTML = 'Avoids corners off (default).';
+        var oNoAvoidUIBox = new UIBox(document.body, '5em', undefined, true);
+        oNoAvoidUIBox.setBorderWidth(10);
+        oNoAvoidUIBox.setBorderRadius('2.5em');
+        oNoAvoidUIBox.oInnerElement.innerHTML = 'Avoids corners on.';
+        document.body.appendChild(document.createElement('br'));
+        var oResizeableUIBox = new UIBox(document.body, undefined, undefined, true);
+        oResizeableUIBox.oInnerElement.innerHTML = 'Resizable element with wrapping text that avoids rounded corners.';
+        var iStartTime = new Date().valueOf();
+        setInterval(function () {
+          var nTime = (new Date().valueOf() - iStartTime) / 1000,
+              nWidth = (1 + Math.sin(nTime)) * 200 + 80,
+              nHeight = (1 + Math.sin(nTime / 5)) * 100 + 80,
+              nBorderRadius = (1 + Math.sin(nTime /3)) * 20,
+              nBorderWidth = (1 + Math.sin(nTime /7)) * 20,
+              nH = (1 + Math.sin(nTime /11)) / 2,
+              nS = (1 + Math.sin(nTime /13)) / 2,
+              nL = (1 + Math.sin(nTime /17)) / 2,
+              nA = (1 + Math.sin(nTime /19)) / 2,
+              oColor = new HSLA(nH, nS, nL, nA);
+          oResizeableUIBox.setBorderWidth(nBorderWidth);
+          oResizeableUIBox.setBorderRadius(nBorderRadius);
+          oResizeableUIBox.setColor(oColor);
+          oResizeableUIBox.setSize(nWidth, nHeight);
+        }, 1000 / 60);
+      }
+    </script>
+  </head>
+  <body onload="go()">
+  </body>
+</html>

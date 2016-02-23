@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script type="text/javascript" src="Css/Css.js"></script>
+    <script type="text/javascript" src="CombinedEvents/CombinedEvents.js"></script>
+    <script type="text/javascript" src="Events/Events.js"></script>
+    <script type="text/javascript" src="Nodes/Nodes.js"></script>
+    <script type="text/javascript" src="RGBA/RGBA.js"></script>
+    <script type="text/javascript" src="UIBox/UIBox.js"></script>
+    <script type="text/javascript" src="UIProgressBar/UIProgressBar.js"></script>
+    <script type="text/javascript" src="UISlider/UISlider.js"></script>
+    <script type="text/javascript">
+      function go() {
+        var oColorF = new HSLA(1, 1, .5, 1), oColorB = new HSLA(1, 0, .75, 1);
+        var oSliderFH = new UISlider(document.getElementById('containerFH'), '100%', '100%');
+        var oSliderFS = new UISlider(document.getElementById('containerFS'), '100%', '100%');
+        var oSliderFL = new UISlider(document.getElementById('containerFL'), '100%', '100%');
+        var oSliderFA = new UISlider(document.getElementById('containerFA'), '100%', '100%');
+        var oSliderBH = new UISlider(document.getElementById('containerBH'), '100%', '100%');
+        var oSliderBS = new UISlider(document.getElementById('containerBS'), '100%', '100%');
+        var oSliderBL = new UISlider(document.getElementById('containerBL'), '100%', '100%');
+        var oSliderBA = new UISlider(document.getElementById('containerBA'), '100%', '100%');
+        oSliderFH.setValue(oColorF.nH);
+        oSliderFS.setValue(oColorF.nS);
+        oSliderFL.setValue(oColorF.nL);
+        oSliderFA.setValue(oColorF.nA);
+        oSliderBH.setValue(oColorB.nH);
+        oSliderBS.setValue(oColorB.nS);
+        oSliderBL.setValue(oColorB.nL);
+        oSliderBA.setValue(oColorB.nA);
+        oSliderFH.addEventListener('changeValue', updateColors);
+        oSliderFS.addEventListener('changeValue', updateColors);
+        oSliderFL.addEventListener('changeValue', updateColors);
+        oSliderFA.addEventListener('changeValue', updateColors);
+        oSliderBH.addEventListener('changeValue', updateColors);
+        oSliderBS.addEventListener('changeValue', updateColors);
+        oSliderBL.addEventListener('changeValue', updateColors);
+        oSliderBA.addEventListener('changeValue', updateColors);
+
+        var oProgressBar = new UIProgressBar(document.getElementById('progressbar'), '100%', '100%');
+        var iStartTime = new Date().valueOf();
+        setInterval(function () {
+          var nTime = (new Date().valueOf() - iStartTime) / 1000;
+          oProgressBar.setValue((1 + Math.sin(nTime)) / 2);
+        }, 1000 / 60);
+        updateColors();
+
+        function updateColors() {
+          var oColorF = new HSLA(1, 1, .5, 1), oColorB = new HSLA(1, 1, .75, 1);
+          oSliderFH.setColor(oColorF.setHue(oSliderFH.getValue()));
+          oSliderFS.setColor(oColorF.setSaturation(oSliderFS.getValue()));
+          oSliderFL.setColor(oColorF.setLuminosity(oSliderFL.getValue()));
+          oSliderFA.setColor(oColorF.setOpacity(oSliderFA.getValue()));
+          oSliderBH.setBackgroundColor(oColorB.setHue(oSliderBH.getValue()));
+          oSliderBS.setBackgroundColor(oColorB.setSaturation(oSliderBS.getValue()));
+          oSliderBL.setBackgroundColor(oColorB.setLuminosity(oSliderBL.getValue()));
+          oSliderBA.setBackgroundColor(oColorB.setOpacity(oSliderBA.getValue()));
+          oProgressBar.setColor(oColorF);
+          oProgressBar.setBackgroundColor(oColorB);
+        }
+      }
+    </script>
+  </head>
+  <body onload="go()">
+    <table><tr><td>
+      <fieldset>
+        <legend>foreground</legend>
+        <table>
+          <tr><td>Hue</td><td id="containerFH" style="width: 300px; height: 1em;"></td></tr>
+          <tr><td>Saturation</td><td id="containerFS" style="width: 300px; height: 1em;"></td></tr>
+          <tr><td>Luminosity</td><td id="containerFL" style="width: 300px; height: 1em;"></td></tr>
+          <tr><td>Transparency</td><td id="containerFA" style="width: 300px; height: 1em;"></td></tr>
+        </table>
+      </fieldset>
+    </td><td>
+      <fieldset>
+        <legend>background</legend>
+        <table>
+          <tr><td>Hue</td><td id="containerBH" style="width: 300px; height: 1em;"></td></tr>
+          <tr><td>Saturation</td><td id="containerBS" style="width: 300px; height: 1em;"></td></tr>
+          <tr><td>Luminosity</td><td id="containerBL" style="width: 300px; height: 1em;"></td></tr>
+          <tr><td>Transparency</td><td id="containerBA" style="width: 300px; height: 1em;"></td></tr>
+        </table>
+      </fieldset>
+    </td></tr></table>
+    <div id="progressbar" style="width: 200px; height: 1em; margin: 10px;">
+    </div>
+  </body>
+</html>
