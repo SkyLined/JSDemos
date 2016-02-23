@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      * { border: 0; margin: 0; padding: 0; width: 100%; height: 100; };
+    </style>
+    <script>
+      onload = function() {
+        var aoShapes = [
+              new cCube(1, 1, 1, 1)
+            ];
+        fDrawLoop(aoShapes);
+      };
+      function fDrawLoop(aoShapes) {
+        var nTime = new Date().valueOf(),
+            // world
+            aanWorldTransformation = faanRotationTransformation(nTime / 12345, nTime / 56789, nTime / 90123),
+            // camera
+            anCameraPosition = [0, 0, 1.5],
+            anCameraRotation = [0, 0, 0];
+            anViewerPosition = [0, 0, 2],
+            aanCameraRotationTransformation = faanRotationTransformation(anCameraRotation[0], anCameraRotation[1], anCameraRotation[2]),
+            // canvas
+            uCanvasWidth = document.documentElement.clientWidth,
+            uCanvasHeight = document.documentElement.clientHeight,
+            nCanvasSize = Math.min(uCanvasWidth, uCanvasHeight) / 3,
+            nCanvasLeft = uCanvasWidth / 2,
+            nCanvasTop = uCanvasHeight / 2;
+        oCanvasElement.width = uCanvasWidth;
+        oCanvasElement.height = uCanvasHeight;
+        var o2DContext = oCanvasElement.getContext("2d");
+        fDrawCanvas(o2DContext, aoShapes, aanWorldTransformation, aanCameraRotationTransformation, anCameraPosition, anViewerPosition, nCanvasSize, nCanvasLeft, nCanvasTop);
+//        console.log(new Date().valueOf() - nTime);
+        requestAnimationFrame(function () {
+          fDrawLoop(aoShapes);
+        });
+      };
+      function fsVertex(anVertex) {
+        return "(" + [Math.round(anVertex[0]*100)/ 100, Math.round(anVertex[1]*100)/ 100, Math.round(anVertex[2]*100)/ 100, ].join(", ") + ")";
+      };
+      function fDrawCanvas(o2DContext, aoShapes, aanWorldTransformation, aanCameraRotationTransformation, anCameraPosition, aanView, nCanvasSize, nCanvasLeft, nCanvasTop) {
+        o2DContext.fillStyle = "#FCF8F4";
+        o2DContext.fillRect(0, 0, oCanvasElement.width, oCanvasElement.height);
+        o2DContext.fillStyle = "#0C0804";
+        o2DContext.strokeStyle = "#0C0804";
+        aoShapes.forEach(function (oShape) {
+          var aanTransformedVertices = [],
+              aanVertexCanvasLocations = [];
+          var aanShapeTransformation = faanMatrixMultiplication(aanWorldTransformation, oShape.aanTransformation);
+          oShape.aanVertices.forEach(function (anVertex) {
+            var aanVertexMatrix = [[anVertex[0]], [anVertex[1]], [anVertex[2]], [1]];
+            aanTransformedVertixMatrix = faanMatrixMultiplication(aanShapeTransformation, aanVertexMatrix);
+            anTransformedVertex = [
+              aanTransformedVertixMatrix[0][0],
+              aanTransformedVertixMatrix[1][0],
+              aanTransformedVertixMatrix[2][0],
+            ];
+            aanTransformedVertices.push(anTransformedVertex);
+            aanCameraPositionMatrix = [[anCameraPosition[0]], [anCameraPosition[1]], [anCameraPosition[2]], [1]];
+            aanTransformedVertexRelativeToCameraMatrix = faanMatrixSubtraction(aanTransformedVertixMatrix, aanCameraPositionMatrix);
+            aanTransformedVertexRelativeToCameraAndRotatedMatrix = faanMatrixMultiplication(aanCameraRotationTransformation, aanTransformedVertexRelativeToCameraMatrix);
+            anPerspectiveVertex = [
+              aanTransformedVertexRelativeToCameraAndRotatedMatrix[0][0],
+              aanTransformedVertexRelativeToCameraAndRotatedMatrix[1][0],
+              aanTransformedVertexRelativeToCameraAndRotatedMatrix[2][0],
+            ];
+            var nPerspective = anViewerPosition[2] / anPerspectiveVertex[2],
+                anVertexCanvasLocation = [
+                  (nPerspective * anPerspectiveVertex[0] - anViewerPosition[0]) * nCanvasSize + nCanvasLeft,
+                  (nPerspective * anPerspectiveVertex[1] - anViewerPosition[1]) * nCanvasSize + nCanvasTop
+                ];
+            aanVertexCanvasLocations.push(anVertexCanvasLocation); 
+          });
+          // Determine all paths for all visible faces.
+          var aaanShapeFacesPathLocations = [];
+          for (var uFaceIndex = 0; uFaceIndex < oShape.aauFaceVertexIndices.length; uFaceIndex++ ) {
+            // Get the face normal and vertices.
+            var uFaceNormalVertexIndex = oShape.auFaceNormalVertexIndices[uFaceIndex],
+                auFaceVertexIndices = oShape.aauFaceVertexIndices[uFaceIndex];
+            // Back-face culling
+            var anTransformedFaceNormalVertex = aanTransformedVertices[uFaceNormalVertexIndex],
+                // Determine vector from camera to any vertex on the face.
+                anTransformedFirstFaceVertex = aanTransformedVertices[uFaceNormalVertexIndex], // oShape.aauFaceVertexIndices[uFaceIndex][0]],
+                anVectorFromCameraToTransformedFirstFaceVertex = [
+                  anTransformedFirstFaceVertex[0] - anCameraPosition[0],
+                  anTransformedFirstFaceVertex[1] - anCameraPosition[1],
+                  anTransformedFirstFaceVertex[2] - anCameraPosition[2],
+                ],
+                nAngle = (
+                  anVectorFromCameraToTransformedFirstFaceVertex[0] * anTransformedFaceNormalVertex[0] +
+                  anVectorFromCameraToTransformedFirstFaceVertex[1] * anTransformedFaceNormalVertex[1] +
+                  anVectorFromCameraToTransformedFirstFaceVertex[2] * anTransformedFaceNormalVertex[2]
+                );
+            var anFaceNormalCanvasLocations = aanVertexCanvasLocations[uFaceNormalVertexIndex];
+            if (nAngle < 0) {
+              aanFacePathLocations = [];
+              var anFirstLocation = null;
+              auFaceVertexIndices.forEach(function (uVertexIndex) {
+                anLocation = aanVertexCanvasLocations[uVertexIndex];
+                aanFacePathLocations.push(anLocation);
+              });
+              aaanShapeFacesPathLocations.push(aanFacePathLocations);
+            };
+          };
+          o2DContext.strokeStyle = "rgba(25, 15, 5, 1)";
+          o2DContext.lineWidth = nCanvasSize / 5;
+          o2DContext.lineCap = o2DContext.lineJoin = "round";
+          o2DContext.shadowColor = "rgba(25, 15, 5, 1)";
+          o2DContext.shadowBlur = nCanvasSize / 5;
+          aaanShapeFacesPathLocations.forEach(function (aanPathLocations) {
+            o2DContext.beginPath();
+            aanPathLocations.forEach(function (anLocation, uIndex) {
+              if (uIndex == 0) {
+                o2DContext.moveTo(anLocation[0], anLocation[1]);
+              } else {
+                o2DContext.lineTo(anLocation[0], anLocation[1]);
+              };
+            });
+            o2DContext.closePath();
+            o2DContext.stroke();
+          });
+          o2DContext.shadowBlur = 0;
+          o2DContext.fillStyle = "rgba(250, 240, 230, 1)";
+          aaanShapeFacesPathLocations.forEach(function (aanPathLocations) {
+            o2DContext.beginPath();
+            aanPathLocations.forEach(function (anLocation, uIndex) {
+              if (uIndex == 0) {
+                o2DContext.moveTo(anLocation[0], anLocation[1]);
+              } else {
+                o2DContext.lineTo(anLocation[0], anLocation[1]);
+              };
+            });
+            o2DContext.closePath();
+            o2DContext.fill();
+          });
+        });
+      };
+      
+      function cCube(x, y, z) {
+        var oThis = this;
+        oThis.aanVertices = [
+          [-x / 2, -y / 2, -z / 2, "left bottom back"],     // 0
+          [-x / 2, -y / 2,  z / 2, "left bottom front"],    // 1
+          [-x / 2,  y / 2, -z / 2, "left top back"],        // 2
+          [-x / 2,  y / 2,  z / 2, "left top front"],       // 3
+          [ x / 2, -y / 2, -z / 2, "right bottom back"],    // 4
+          [ x / 2, -y / 2,  z / 2, "right bottom front"],   // 5
+          [ x / 2,  y / 2, -z / 2, "right top back"],       // 6
+          [ x / 2,  y / 2,  z / 2, "right top front"],      // 7
+          [     0,      0,   -1/2, "back"],                 // 8
+          [     0,      0,    1/2, "front"],                // 9
+          [     0,   -1/2,      0, "bottom"],               // 10
+          [     0,    1/2,      0, "top"],                  // 11
+          [  -1/2,      0,      0, "left"],                 // 12
+          [   1/2,      0,      0, "right"],                // 13
+        ];
+        this.aauFaceVertexIndices = [
+          // Vertices are counter clockwise when looking along the normal.
+          // Faces must be in an order where each previous and next face share at
+          // least two vertices (i.e. they are adjacent)
+          [ 0, 2, 3, 1], // left
+          [ 0, 1, 5, 4], // bottom
+          [ 0, 4, 6, 2], // back
+          [ 4, 5, 7, 6], // right
+          [ 2, 6, 7, 3], // top
+          [ 1, 3, 7, 5], // front
+        ];
+        this.auFaceNormalVertexIndices = [
+          // Must be in same order as face vertices.
+          12,  // left
+          10,  // bottom
+          8,   // back
+          13,  // right
+          11,  // top
+          9,   // front
+        ];
+        oThis.aanTransformation = [
+          [1, 0, 0, 0],
+          [0, 1, 0, 0],
+          [0, 0, 1, 0],
+          [0, 0, 0, 1]
+        ];
+      };
+      function faanRotationTransformation(rx, ry, rz) {
+        var crx = Math.cos(rx), srx = Math.sin(rx),
+            cry = Math.cos(ry), sry = Math.sin(ry),
+            crz = Math.cos(rz), srz = Math.sin(rz);
+        return faanMatrixMultiplication(
+          [
+            [   1,    0,    0, 0],
+            [   0,  crx, -srx, 0],
+            [   0,  srx,  crx, 0],
+            [   0,    0,    0, 1]
+          ],
+          [
+            [ cry,    0,  sry, 0],
+            [   0,    1,    0, 0],
+            [-sry,    0,  cry, 0],
+            [   0,    0,    0, 1]
+          ],
+          [
+            [ crz, -srz,    0, 0],
+            [ srz,  crz,    0, 0],
+            [   0,    0,    1, 0],
+            [   0,    0,    0, 1]
+          ]
+        );
+      };
+      function faanMatrixSubtraction(/*...*/) {
+        var aanResultMatrix = [];
+        for (var uRow = 0; uRow < arguments[0].length; uRow++) {
+          aanResultMatrix[uRow] = [];
+          var aanMatrix = arguments[0];
+          for (var uColumn = 0; uColumn < aanMatrix[0].length; uColumn++) {
+            aanResultMatrix[uRow][uColumn] = aanMatrix[uRow][uColumn];
+          };
+        };
+        for (var uMatrix = 1; uMatrix < arguments.length; uMatrix++) {
+          var aanMatrix = arguments[uMatrix];
+          for (var uRow = 0; uRow < aanMatrix.length; uRow++) {
+            for (var uColumn = 0; uColumn < aanMatrix[0].length; uColumn++) {
+              aanResultMatrix[uRow][uColumn] -= aanMatrix[uRow][uColumn];
+            };
+          };
+        };
+        return aanResultMatrix;
+      };
+      function faanMatrixMultiplication(/*...*/) {
+        var aanResultMatrix,
+            aanLeftMatrix = arguments[0];
+        for (var uMatrix = 1; uMatrix < arguments.length; uMatrix++) {
+          var aanRightMatrix = arguments[uMatrix],
+              aanTempMatrix = [];
+          for (var uRow = 0; uRow < aanLeftMatrix.length; uRow++) {
+            aanTempMatrix[uRow] = [];
+            for (var uColumn = 0; uColumn < aanRightMatrix[0].length; uColumn++) {
+              if (aanLeftMatrix[0].length != aanRightMatrix.length) {
+                throw new Error("Cannot multiply " + aanLeftMatrix.length + "x" + aanLeftMatrix[0].length + " and " + 
+                    aanRightMatrix.length + "x" + aanRightMatrix[0].length + " matrices");
+              };
+              var nResult = aanLeftMatrix[uRow][0] * aanRightMatrix[0][uColumn];
+              for (var uIndex = 1; uIndex < aanRightMatrix.length; uIndex++) {
+                nResult += aanLeftMatrix[uRow][uIndex] * aanRightMatrix[uIndex][uColumn];
+              };
+              aanTempMatrix[uRow][uColumn] = nResult;
+            };
+          };
+          aanResultMatrix = aanTempMatrix;
+          aanLeftMatrix = aanResultMatrix;
+        };
+        return aanResultMatrix;
+      };
+    </script>
+  </head>
+  <body>
+    <canvas id="oCanvasElement">
+  </body>
+</html>

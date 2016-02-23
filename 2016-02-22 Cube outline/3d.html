@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      * { border: 0; margin: 0; padding: 0; width: 100%; height: 100; };
+    </style>
+    <script>
+      onload = function() {
+        var aoShapes = [
+              new cCube(1, 1, 1, 1)
+            ];
+        fDrawLoop(aoShapes);
+      };
+      function fDrawLoop(aoShapes) {
+        var nTime = new Date().valueOf(),
+            // world
+            aanWorldTransformation = faanRotationTransformation(nTime / 12345, nTime / 56789, nTime / 90123),
+            // camera
+            anCameraPosition = [0, 0, 1.5],
+            anCameraRotation = [0, 0, 0];
+            anViewerPosition = [0, 0, 1.5],
+            aanCameraRotationTransformation = faanRotationTransformation(anCameraRotation[0], anCameraRotation[1], anCameraRotation[2]),
+            // canvas
+            uCanvasWidth = document.documentElement.clientWidth,
+            uCanvasHeight = document.documentElement.clientHeight,
+            nCanvasSize = Math.min(uCanvasWidth, uCanvasHeight) / 3,
+            nCanvasLeft = uCanvasWidth / 2,
+            nCanvasTop = uCanvasHeight / 2;
+        console.log("aanWorldTransformation = " + JSON.stringify(aanWorldTransformation));
+        console.log("aanCameraRotationTransformation = " + JSON.stringify(aanCameraRotationTransformation));
+        console.log("canvas = " + uCanvasWidth + "x" + uCanvasHeight);
+        oCanvasElement.width = uCanvasWidth;
+        oCanvasElement.height = uCanvasHeight;
+        var o2DContext = oCanvasElement.getContext("2d");
+        fDrawCanvas(o2DContext, aoShapes, aanWorldTransformation, aanCameraRotationTransformation, anCameraPosition, anViewerPosition, nCanvasSize, nCanvasLeft, nCanvasTop);
+        console.log(new Date().valueOf() - nTime);
+        requestAnimationFrame(function () {
+          fDrawLoop(aoShapes);
+        });
+      };
+      
+      function fDrawCanvas(o2DContext, aoShapes, aanWorldTransformation, aanCameraRotationTransformation, anCameraPosition, aanView, nCanvasSize, nCanvasLeft, nCanvasTop) {
+        o2DContext.fillStyle = "#FCF8F4";
+        o2DContext.fillRect(0, 0, oCanvasElement.width, oCanvasElement.height);
+        o2DContext.fillStyle = "#0C0804";
+        o2DContext.strokeStyle = "#0C0804";
+        aoShapes.forEach(function (oShape) {
+          var aanPerspectiveVertices = [],
+              aanVertexCanvasLocations = [];
+          var aanShapeTransformation = faanMatrixMultiplication(aanWorldTransformation, oShape.aanTransformation);
+          console.log("aanShapeTransformation = " + JSON.stringify(aanShapeTransformation));
+          var bLog = true;
+          oShape.aanVertices.forEach(function (anVertex) {
+            var aanVertexMatrix = [[anVertex[0]], [anVertex[1]], [anVertex[2]], [1]];
+            aanTransformedVertixMatrix = faanMatrixMultiplication(aanShapeTransformation, aanVertexMatrix);
+            if (bLog) {
+              console.log(JSON.stringify(aanVertexMatrix) + " =shape transformation=> " + JSON.stringify(aanTransformedVertixMatrix));
+            };
+            aanCameraPositionMatrix = [[anCameraPosition[0]], [anCameraPosition[1]], [anCameraPosition[2]], [1]];
+            aanTransformedVertexRelativeToCameraMatrix = faanMatrixSubtraction(aanTransformedVertixMatrix, aanCameraPositionMatrix);
+//            if (bLog) {
+//              console.log(JSON.stringify(aanTransformedVertixMatrix) + " =relative to camera=> " + JSON.stringify(aanTransformedVertexRelativeToCameraMatrix));
+//            };
+            aanTransformedVertexRelativeToCameraAndRotatedMatrix = faanMatrixMultiplication(aanCameraRotationTransformation, aanTransformedVertexRelativeToCameraMatrix);
+//            if (bLog) {
+//              console.log(JSON.stringify(aanTransformedVertexRelativeToCameraMatrix) + " =camera rotation transformation=> " + JSON.stringify(aanTransformedVertexRelativeToCameraAndRotatedMatrix));
+//            };
+            anPerspectiveVertex = [
+              aanTransformedVertexRelativeToCameraAndRotatedMatrix[0][0],
+              aanTransformedVertexRelativeToCameraAndRotatedMatrix[1][0],
+              aanTransformedVertexRelativeToCameraAndRotatedMatrix[2][0],
+            ];
+//            if (bLog) {
+//              console.log(JSON.stringify(aanTransformedVertixMatrix) + " =perspective=> " + JSON.stringify(anPerspectiveVertex));
+//            };
+            aanPerspectiveVertices.push(anPerspectiveVertex);
+            var nPerspective = anViewerPosition[2] / anPerspectiveVertex[2],
+                anVertexCanvasLocation = [
+                  (nPerspective * anPerspectiveVertex[0] - anViewerPosition[0]) * nCanvasSize + nCanvasLeft,
+                  (nPerspective * anPerspectiveVertex[1] - anViewerPosition[1]) * nCanvasSize + nCanvasTop
+                ];
+            o2DContext.fillRect(anVertexCanvasLocation[0] - 3, anVertexCanvasLocation[1] - 3, 6, 6);
+//            o2DContext.textAlign = anVertex[3].indexOf("left") == -1 ? "left" : "right";
+//            o2DContext.textBaseline = anVertex[3].indexOf("top") == -1 ? "top" : "bottom";
+//            o2DContext.fillText(anVertex[3],
+//              anVertexCanvasLocation[0] + (anVertex[3].indexOf("left") == -1 ? 3 : -3),
+//              anVertexCanvasLocation[1] + (anVertex[3].indexOf("top") == -1 ? 3 : -3)
+//            );
+            aanVertexCanvasLocations.push(anVertexCanvasLocation); 
+          });
+          o2DContext.beginPath();
+          for (var uFaceIndex = 0; uFaceIndex < oShape.aauFaceVectorIndices.length; uFaceIndex++ ) {
+            var uFaceFrontDirectionVectorIndex = oShape.auFaceFrontDirectionVectorIndices[uFaceIndex],
+                auFaceFrontDirectionVectorVertexIndices = oShape.aauVectorVertexIndices[uFaceFrontDirectionVectorIndex],
+                uFaceFrontDirectionFromVertexIndex = auFaceFrontDirectionVectorVertexIndices[0],
+                uFaceFrontDirectionToVertexIndex = auFaceFrontDirectionVectorVertexIndices[1],
+                anFaceFrontDirectionFromPerspectiveVertex = aanPerspectiveVertices[uFaceFrontDirectionFromVertexIndex],
+                anFaceFrontDirectionToPerspectiveVertex = aanPerspectiveVertices[uFaceFrontDirectionToVertexIndex],
+                nVerticalDirection = anFaceFrontDirectionToPerspectiveVertex[2] - anFaceFrontDirectionFromPerspectiveVertex[2],
+                anFaceFrontDirectionToVertexCanvasLocation = aanVertexCanvasLocations[uFaceFrontDirectionToVertexIndex];
+            o2DContext.fillText(anFaceFrontDirectionToPerspectiveVertex[2] + " => " + anFaceFrontDirectionFromPerspectiveVertex[2],
+              anFaceFrontDirectionToVertexCanvasLocation[0],
+              anFaceFrontDirectionToVertexCanvasLocation[1]
+            );
+            if (nVerticalDirection > 0) {
+              var auFaceVectorIndices = oShape.aauFaceVectorIndices[uFaceIndex];
+              auFaceVectorIndices.forEach(function (uVectorIndex) {
+                var auVectorVertexIndices = oShape.aauVectorVertexIndices[uVectorIndex],
+                    anFromLocation = aanVertexCanvasLocations[auVectorVertexIndices[0]],
+                    anToLocation = aanVertexCanvasLocations[auVectorVertexIndices[1]];
+                o2DContext.moveTo(anFromLocation[0], anFromLocation[1]);
+                o2DContext.lineTo(anToLocation[0], anToLocation[1]);
+              });
+            };
+          };
+          o2DContext.stroke();
+        });
+      };
+      
+      function cCube(x, y, z) {
+        var oThis = this;
+        oThis.aanVertices = [
+          [-x / 2, -y / 2, -z / 2, "left bottom back"],     // 0
+          [-x / 2, -y / 2,  z / 2, "left bottom front"],    // 1
+          [-x / 2,  y / 2, -z / 2, "left top back"],        // 2
+          [-x / 2,  y / 2,  z / 2, "left top front"],       // 3
+          [ x / 2, -y / 2, -z / 2, "right bottom back"],    // 4
+          [ x / 2, -y / 2,  z / 2, "right bottom front"],   // 5
+          [ x / 2,  y / 2, -z / 2, "right top back"],       // 6
+          [ x / 2,  y / 2,  z / 2, "right top front"],      // 7
+          [     0,      0,     -1, "back"],                 // 8
+          [     0,      0,      1, "front"],                // 9
+          [     0,     -1,      0, "bottom"],               // 10
+          [     0,      1,      0, "top"],                  // 11
+          [    -1,      0,      0, "left"],                 // 12
+          [     1,      0,      0, "right"],                // 13
+        ];
+        this.aauVectorVertexIndices = [
+          [ 0,  1], // left         bottom      back->front   // 0
+          [ 0,  2], // left         bottom->top back          // 1
+          [ 1,  3], // left         bottom->top front         // 2
+          [ 2,  3], // left         top         back->front   // 3
+          [ 0,  4], // left->right  bottom      back          // 4
+          [ 1,  5], // left->right  bottom      front         // 5
+          [ 2,  6], // left->right  top         back          // 6
+          [ 3,  7], // left->right  top         front         // 7
+          [ 4,  5], // right        bottom      back->front   // 8
+          [ 4,  6], // right        bottom->top back          // 9
+          [ 5,  7], // right        bottom->top front         // 10
+          [ 6,  7], // right        top         back->front   // 11
+          [ 8,  9], // back -> front                          // 12
+          [10, 11], // bottom -> top                          // 13
+          [12, 13], // left -> right                          // 14
+        ];
+        // Make a copy of every vector that goes in the opposite direction. These will have an index offset by 15 from
+        // the original.
+        for (var u = 0; u < 15; u++) {
+          this.aauVectorVertexIndices.push([this.aauVectorVertexIndices[u][1], this.aauVectorVertexIndices[u][0]]);
+        };
+        this.aauFaceVectorIndices = [
+          [ 1,  4,  6+15,  9+15], // back
+          [ 2,  5,  7+15, 10+15], // front
+          [ 0,  4,  5+15,  8+15], // bottom
+          [ 3,  6,  7+15, 11+15], // top
+          [ 0,  1,  2+15,  3+15], // left
+          [ 8,  9, 10+15, 11+15], // right
+        ];
+        this.auFaceFrontDirectionVectorIndices = [
+          12+15,    // front->back
+          12,       // back->front
+          13+15,    // top->bottom
+          13,       // bottom->top
+          14+15,    // right->left
+          14        // left->right
+        ];
+        oThis.aanTransformation = [
+          [1, 0, 0, 0],
+          [0, 1, 0, 0],
+          [0, 0, 1, 0],
+          [0, 0, 0, 1]
+        ];
+      };
+      function faanRotationTransformation(rx, ry, rz) {
+        var crx = Math.cos(rx), srx = Math.sin(rx),
+            cry = Math.cos(ry), sry = Math.sin(ry),
+            crz = Math.cos(rz), srz = Math.sin(rz);
+        return faanMatrixMultiplication(
+          [
+            [   1,    0,    0, 0],
+            [   0,  crx, -srx, 0],
+            [   0,  srx,  crx, 0],
+            [   0,    0,    0, 1]
+          ],
+          [
+            [ cry,    0,  sry, 0],
+            [   0,    1,    0, 0],
+            [-sry,    0,  cry, 0],
+            [   0,    0,    0, 1]
+          ],
+          [
+            [ crz, -srz,    0, 0],
+            [ srz,  crz,    0, 0],
+            [   0,    0,    1, 0],
+            [   0,    0,    0, 1]
+          ]
+        );
+      };
+      function faanFlipMatrix(aanOriginalMatrix) {
+        var aanFlippedMatrix = [];
+        for (var uColumn = 0; uColumn < aanOriginalMatrix[0].length; uColumn++) {
+          aanFlippedMatrix[uColumn] = [];
+          for (var uRow = 0; uRow < aanOriginalMatrix.length; uRow++) {
+            aanFlippedMatrix[uColumn][uRow] = aanOriginalMatrix[uRow][uColumn];
+          };
+        };
+        return aanFlippedMatrix;
+      };
+      
+      function faanMatrixSubtraction(/*...*/) {
+        var aanResultMatrix = [];
+        for (var uRow = 0; uRow < arguments[0].length; uRow++) {
+          aanResultMatrix[uRow] = [];
+          var aanMatrix = arguments[0];
+          for (var uColumn = 0; uColumn < aanMatrix[0].length; uColumn++) {
+            aanResultMatrix[uRow][uColumn] = aanMatrix[uRow][uColumn];
+          };
+        };
+        for (var uMatrix = 1; uMatrix < arguments.length; uMatrix++) {
+          var aanMatrix = arguments[uMatrix];
+          for (var uRow = 0; uRow < aanMatrix.length; uRow++) {
+            for (var uColumn = 0; uColumn < aanMatrix[0].length; uColumn++) {
+              aanResultMatrix[uRow][uColumn] -= aanMatrix[uRow][uColumn];
+            };
+          };
+        };
+        return aanResultMatrix;
+      };
+      function faanMatrixMultiplication(/*...*/) {
+        var aanResultMatrix,
+            aanLeftMatrix = arguments[0];
+        for (var uMatrix = 1; uMatrix < arguments.length; uMatrix++) {
+          var aanRightMatrix = arguments[uMatrix],
+              aanTempMatrix = [];
+          for (var uRow = 0; uRow < aanLeftMatrix.length; uRow++) {
+            aanTempMatrix[uRow] = [];
+            for (var uColumn = 0; uColumn < aanRightMatrix[0].length; uColumn++) {
+              if (aanLeftMatrix[0].length != aanRightMatrix.length) {
+                throw new Error("Cannot multiply " + aanLeftMatrix.length + "x" + aanLeftMatrix[0].length + " and " + 
+                    aanRightMatrix.length + "x" + aanRightMatrix[0].length + " matrices");
+              };
+              var nResult = aanLeftMatrix[uRow][0] * aanRightMatrix[0][uColumn];
+              for (var uIndex = 1; uIndex < aanRightMatrix.length; uIndex++) {
+                nResult += aanLeftMatrix[uRow][uIndex] * aanRightMatrix[uIndex][uColumn];
+              };
+              aanTempMatrix[uRow][uColumn] = nResult;
+            };
+          };
+          aanResultMatrix = aanTempMatrix;
+          aanLeftMatrix = aanResultMatrix;
+        };
+        return aanResultMatrix;
+      };
+    </script>
+  </head>
+  <body>
+    <canvas id="oCanvasElement">
+  </body>
+</html>
