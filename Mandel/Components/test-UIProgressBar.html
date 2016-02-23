@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script type="text/javascript" src="CombinedEvents/CombinedEvents.js"></script>
+    <script type="text/javascript" src="Css/Css.js"></script>
+    <script type="text/javascript" src="Events/Events.js"></script>
+    <script type="text/javascript" src="Nodes/Nodes.js"></script>
+    <script type="text/javascript" src="RGBA/RGBA.js"></script>
+    <script type="text/javascript" src="UIBox/UIBox.js"></script>
+    <script type="text/javascript" src="UIProgressBar/UIProgressBar.js"></script>
+    <script type="text/javascript">
+      function go() {
+        var dsBorderStyles = {
+            'inset': 'outset',
+            'outset': 'inset',
+            'solid': 'solid'
+        };
+        var aoProgressBars = []
+        for (var sBackgroundBorderStyle in dsBorderStyles) {
+          var sBarBorderStyle = dsBorderStyles[sBackgroundBorderStyle];
+          document.body.appendChild(document.createTextNode(sBackgroundBorderStyle + '/' + sBarBorderStyle));
+          document.body.appendChild(document.createElement('br'));
+          for (var nX = 1/5; nX <= 1; nX += 1/5) {
+            var oColorF = new HSL(nX, 1, .5);
+            var oUIProgressBar = new UIProgressBar(document.body, '8em', '28px');
+            oUIProgressBar.setOpacity(nX);
+            oUIProgressBar.setBackgroundBorderStyle(sBackgroundBorderStyle);
+            oUIProgressBar.setBarBorderStyle(sBarBorderStyle);
+            oUIProgressBar.setBackgroundBorderWidth((12 - nX * 10) + 'px', false);
+            oUIProgressBar.setBarBorderWidth((nX * 10) + 'px', false);
+            oUIProgressBar.setBarColor(oColorF);
+            oUIProgressBar.setBackgroundBorderColor(oColorF);
+            aoProgressBars.push(oUIProgressBar);
+          }
+          document.body.appendChild(document.createElement('br'));
+        }
+        var iStartTime = new Date().valueOf();
+        setInterval(function () {
+          var nTime = (new Date().valueOf() - iStartTime) / 1000;
+          for (var i = 0; i < aoProgressBars.length; i++) {
+            aoProgressBars[i].setValue((1 + Math.sin(nTime)) / 2);
+          }
+        }, 1000 / 60);
+      }
+    </script>
+  </head>
+  <body onload="go()">
+  </body>
+</html>

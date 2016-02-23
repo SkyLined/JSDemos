@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script type="text/javascript" src="CombinedEvents/CombinedEvents.js"></script>
+    <script type="text/javascript" src="Css/Css.js"></script>
+    <script type="text/javascript" src="Events/Events.js"></script>
+    <script type="text/javascript" src="Nodes/Nodes.js"></script>
+    <script type="text/javascript" src="Popup/Popup.js"></script>
+    <script type="text/javascript" src="RGBA/RGBA.js"></script>
+    <script type="text/javascript" src="TransitionTimer/TransitionTimer.js"></script>
+    <script type="text/javascript">
+      function go() {
+        var oPopup = new Popup(document.documentElement, 'Test popup', 'This is a test');
+        oPopup.open();
+      }
+    </script>
+  </head>
+  <body onload="go();">
+  </body>
+</html>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script type="text/javascript" src="Css/Css.js"></script>
+    <script type="text/javascript" src="CombinedEvents/CombinedEvents.js"></script>
+    <script type="text/javascript" src="Events/Events.js"></script>
+    <script type="text/javascript" src="Nodes/Nodes.js"></script>
+    <script type="text/javascript" src="RGBA/RGBA.js"></script>
+    <script type="text/javascript" src="UIBox/UIBox.js"></script>
+    <script type="text/javascript" src="UIColorPicker/UIColorPicker.js"></script>
+    <script type="text/javascript" src="UIProgressBar/UIProgressBar.js"></script>
+    <script type="text/javascript" src="UISlider/UISlider.js"></script>
+    <script type="text/javascript">
+      function go() {
+        var oBarBorderColor = new RGB(1/3, 2/3, 1), 
+            oBarBackgroundColor = oBarBorderColor.copy(),
+            oBackgroundBorderColor = new HSLA(1, 0, .75, 1),
+            oBackgroundBackgroundColor = oBackgroundBorderColor.copy();
+        var oBarBorderColorColorPicker = new UIColorPicker(document.getElementById('containerBarBorder'), oBarBorderColor, '100%', '100%'),
+            oBarBackgroundColorColorPicker = new UIColorPicker(document.getElementById('containerBarBackground'), oBarBackgroundColor, '100%', '100%'),
+            oBackgroundBorderColorColorPicker = new UIColorPicker(document.getElementById('containerBackgroundBorder'), oBackgroundBorderColor, '100%', '100%'),
+            oBackgroundBackgroundColorColorPicker = new UIColorPicker(document.getElementById('containerBackgroundBackground'), oBackgroundBackgroundColor, '100%', '100%');
+        oBarBorderColorColorPicker.addEventListener('changeColor', updateColors);
+        oBarBackgroundColorColorPicker.addEventListener('changeColor', updateColors);
+        oBackgroundBorderColorColorPicker.addEventListener('changeColor', updateColors);
+        oBackgroundBackgroundColorColorPicker.addEventListener('changeColor', updateColors);
+
+        var oProgressBar = new UIProgressBar(document.getElementById('progressbar'), '100%', '100%');
+        var iStartTime = new Date().valueOf();
+        setInterval(function () {
+          var nTime = (new Date().valueOf() - iStartTime) / 1000;
+          oProgressBar.setValue((1 + Math.sin(nTime)) / 2);
+        }, 1000 / 60);
+        updateColors();
+
+        function updateColors() {
+          oProgressBar.setBarBorderColor(oBarBorderColorColorPicker.getColor());
+          oProgressBar.setBarBackgroundColor(oBarBackgroundColorColorPicker.getColor());
+          oProgressBar.setBackgroundBorderColor(oBackgroundBorderColorColorPicker.getColor());
+          oProgressBar.setBackgroundBackgroundColor(oBackgroundBackgroundColorColorPicker.getColor());
+        }
+      }
+    </script>
+  </head>
+  <body onload="go()">
+    <table>
+      <tr>
+        <td>
+          <fieldset>
+            <legend>bar border</legend>
+            <div id="containerBarBorder" style="width: 300px; height: 8em;"></div>
+          </fieldset>
+        </td><td>
+          <fieldset>
+            <legend>bar background</legend>
+            <div id="containerBarBackground" style="width: 300px; height: 8em;"></div>
+          </fieldset>
+        </td>
+      </tr><tr>
+        <td>
+          <fieldset>
+            <legend>background border</legend>
+            <div id="containerBackgroundBorder" style="width: 300px; height: 8em;"></div>
+          </fieldset>
+        </td><td>
+          <fieldset>
+            <legend>background background</legend>
+            <div id="containerBackgroundBackground" style="width: 300px; height: 8em;"></div>
+          </fieldset>
+        </td>
+      </tr>
+    </table>
+    <div id="progressbar" style="width: 200px; height: 1em; margin: 10px;">
+    </div>
+  </body>
+</html>

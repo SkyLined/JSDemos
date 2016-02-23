@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script type="text/javascript" src="Css/Css.js"></script>
+    <script type="text/javascript" src="Nodes/Nodes.js"></script>
+    <script type="text/javascript">
+      function go() {
+        var n1em = cssConvertUnitToPixels(document.body, '1cm');
+        var n2em = cssAddUnitsAsPixels(document.body, '1em', '10px');
+        var n3em = cssAddUnitsAsPixels(document.body, '1em', '10px', '1cm');
+        document.write(
+            '1em = ' + n1em + 'px<br/>' +
+            '1em + 10px = ' + n2em + 'px<br/>' +
+            '1em + 10px + 1cm = ' + n3em + 'px<br/>');
+      }
+    </script>
+  </head>
+  <body onload="go();">
+  </body>
+</html>

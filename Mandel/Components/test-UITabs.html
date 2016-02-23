@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <script type="text/javascript" src="Css/Css.js"></script>
+    <script type="text/javascript" src="CombinedEvents/CombinedEvents.js"></script>
+    <script type="text/javascript" src="Events/Events.js"></script>
+    <script type="text/javascript" src="Nodes/Nodes.js"></script>
+    <script type="text/javascript" src="RGBA/RGBA.js"></script>
+    <script type="text/javascript" src="UIBox/UIBox.js"></script>
+    <script type="text/javascript" src="UITabs/UITabs.js"></script>
+    <script type="text/javascript">
+      function go() {
+        var adsTabs = [
+          { name: 'tab1', content: 'content of tab 1', color: new RGB(.5,0,0,1) },
+          { name: 'tab2', content: 'content of tab 2', color: new RGB(0,.5,0,1) },
+          { name: 'tab3 (a longer tab name than would normally fit)', content: 'content of tab 3', color: new RGB(0,0,.5,1) },
+          { name: 'tab4', content: 'content of tab 4' }
+        ];
+        var asStyles = ['inset', 'outset', 'solid'];
+        var oTabs1 = new UITabs(document.body);
+        createTab(oTabs1, adsTabs);
+        var oTabs2 = new UITabs(oTabs1.aoTabs[0].getBodyElement(), true)
+        createTab(oTabs2, adsTabs);
+      }
+
+      function createTab(oTabs, adsTabs) {
+        for (var i = 0; i < adsTabs.length; i++) {
+          var oTab = oTabs.createTab();
+          oTab.getTitleElement().appendChild(document.createTextNode(adsTabs[i].name));
+          oTab.getBodyElement().appendChild(document.createTextNode(adsTabs[i].content));
+          if (adsTabs[i].color) {
+            oTab.setBackgroundColor(adsTabs[i].color);
+            oTab.setBorderColor(adsTabs[i].color);
+          }
+        }
+      }
+    </script>
+  </head>
+  <body onload="go()" style="background: #ffe">
+  </body>
+</html>
